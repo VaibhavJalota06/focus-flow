@@ -28,9 +28,14 @@ class SupabaseService {
     defaultValue:
         '392042986898-sk6utb5j0uhgmk48k1obb3d3h9ce4tsh.apps.googleusercontent.com',
   );
+  static const String googleIosClientId = String.fromEnvironment(
+    'GOOGLE_IOS_CLIENT_ID',
+    defaultValue:
+        '392042986898-d160amrc5u38gt7tj21v23mnb6smhv6t.apps.googleusercontent.com',
+  );
 
   late final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: defaultTargetPlatform == TargetPlatform.iOS ? googleWebClientId : null,
+    clientId: defaultTargetPlatform == TargetPlatform.iOS ? googleIosClientId : null,
     serverClientId: googleWebClientId,
     scopes: ['email', 'profile'],
   );
