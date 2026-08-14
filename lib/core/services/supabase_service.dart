@@ -29,7 +29,8 @@ class SupabaseService {
         '392042986898-sk6utb5j0uhgmk48k1obb3d3h9ce4tsh.apps.googleusercontent.com',
   );
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
+  late final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: defaultTargetPlatform == TargetPlatform.iOS ? googleWebClientId : null,
     serverClientId: googleWebClientId,
     scopes: ['email', 'profile'],
   );
@@ -65,24 +66,10 @@ class SupabaseService {
     }
   }
 
-  /// Google Sign-In with platform-optimized handling (OAuth on iOS to prevent GIDClientID crash, Native 1-Tap on Android)
+  /// Native Google Sign-In on both iOS & Android with automatic OAuth fallback
   Future<UserModel?> signInWithGoogleNative() async {
-    // On iOS: Use Supabase OAuth (ASWebAuthenticationSession) to prevent native GIDClientID crash
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      debugPrint('[SupabaseService] iOS detected: Launching Supabase Google OAuth...');
-      if (isLiveConfigured && _isInitialized) {
-        await client.auth.signInWithOAuth(
-          OAuthProvider.google,
-          redirectTo: redirectCallbackUrl,
-          authScreenLaunchMode: LaunchMode.platformDefault,
-        );
-        return null;
-      }
-    }
-
-    // On Android: Use Native Google Play Services 1-Tap with OAuth fallback
     try {
-      debugPrint('[SupabaseService] Starting Android Google Sign-In...');
+      debugPrint('[SupabaseService] Starting native Google Sign-In...');
       try {
         await _googleSignIn.signOut();
       } catch (_) {}

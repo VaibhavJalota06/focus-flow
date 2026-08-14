@@ -26,7 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<!-- Deep Link URL Types for Supabase & OAuth -->
+	<!-- Google Sign-In Native iOS Configuration -->
+	<key>GIDClientID</key>
+	<string>392042986898-sk6utb5j0uhgmk48k1obb3d3h9ce4tsh.apps.googleusercontent.com</string>
+	<!-- Deep Link URL Types for Supabase & Google OAuth -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -35,6 +38,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>focusflow</string>
+				<string>com.googleusercontent.apps.392042986898-sk6utb5j0uhgmk48k1obb3d3h9ce4tsh</string>
 			</array>
 		</dict>
 	</array>
