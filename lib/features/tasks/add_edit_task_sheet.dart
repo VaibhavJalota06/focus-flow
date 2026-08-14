@@ -178,9 +178,7 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
       setState(() {
         if (isDue) {
           _dueTime = formatted;
-          if (_reminderTime == null) {
-            _reminderTime = 'EXACT';
-          }
+          _reminderTime ??= 'EXACT';
         } else {
           _startTime = formatted;
         }
@@ -595,5 +593,7 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
         ),
       ),
     );
+  },
+);
   }
 }

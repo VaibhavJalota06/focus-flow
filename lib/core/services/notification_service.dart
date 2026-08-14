@@ -71,7 +71,7 @@ class NotificationService {
     // Request permissions for iOS / macOS explicitly
     final iosImplementation =
         _notificationsPlugin.resolvePlatformSpecificImplementation<
-            DarwinFlutterLocalNotificationsPlugin>();
+            IOSFlutterLocalNotificationsPlugin>();
 
     if (iosImplementation != null) {
       await iosImplementation.requestPermissions(
