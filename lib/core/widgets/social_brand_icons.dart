@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 /// Crisp vector-rendered official Google 4-Color 'G' Logo
@@ -22,56 +21,79 @@ class GoogleLogo extends StatelessWidget {
 class _GoogleLogoPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final double w = size.width;
-    final double h = size.height;
-    final double cx = w / 2;
-    final double cy = h / 2;
-    final double radius = w * 0.46;
-    final double strokeWidth = w * 0.20;
+    final scale = size.width / 24.0;
+    canvas.save();
+    canvas.scale(scale, scale);
 
-    final rect = Rect.fromCircle(center: Offset(cx, cy), radius: radius - (strokeWidth / 2));
+    // 1. Blue path
+    final bluePaint = Paint()
+      ..color = const Color(0xFF4285F4)
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+    final bluePath = Path()
+      ..moveTo(23.745, 12.27)
+      ..cubicTo(23.745, 11.57, 23.685, 10.87, 23.555, 10.2)
+      ..lineTo(12.0, 10.2)
+      ..lineTo(12.0, 14.71)
+      ..lineTo(18.6, 14.71)
+      ..cubicTo(18.31, 16.23, 17.46, 17.53, 16.2, 18.39)
+      ..lineTo(16.2, 21.44)
+      ..lineTo(20.08, 21.44)
+      ..cubicTo(22.35, 19.35, 23.745, 16.27, 23.745, 12.27)
+      ..close();
+    canvas.drawPath(bluePath, bluePaint);
 
-    // Colors according to official Google Brand Guidelines
-    const blue = Color(0xFF4285F4);
-    const green = Color(0xFF34A853);
-    const yellow = Color(0xFFFBBC05);
-    const red = Color(0xFFEA4335);
+    // 2. Green path
+    final greenPaint = Paint()
+      ..color = const Color(0xFF34A853)
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+    final greenPath = Path()
+      ..moveTo(12.0, 24.0)
+      ..cubicTo(15.24, 24.0, 17.95, 22.92, 19.93, 21.09)
+      ..lineTo(16.05, 18.04)
+      ..cubicTo(14.97, 18.76, 13.6, 19.2, 12.0, 19.2)
+      ..cubicTo(8.88, 19.2, 6.23, 17.1, 5.28, 14.27)
+      ..lineTo(1.25, 14.27)
+      ..lineTo(1.25, 17.42)
+      ..cubicTo(3.26, 21.36, 7.33, 24.0, 12.0, 24.0)
+      ..close();
+    canvas.drawPath(greenPath, greenPaint);
 
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.butt;
+    // 3. Yellow path
+    final yellowPaint = Paint()
+      ..color = const Color(0xFFFBBC05)
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+    final yellowPath = Path()
+      ..moveTo(5.28, 14.27)
+      ..cubicTo(5.03, 13.55, 4.9, 12.78, 4.9, 12.0)
+      ..cubicTo(4.9, 11.22, 5.03, 10.45, 5.28, 9.73)
+      ..lineTo(5.28, 6.58)
+      ..lineTo(1.25, 6.58)
+      ..cubicTo(0.45, 8.18, 0.0, 9.99, 0.0, 12.0)
+      ..cubicTo(0.0, 14.01, 0.45, 15.82, 1.25, 17.42)
+      ..lineTo(5.28, 14.27)
+      ..close();
+    canvas.drawPath(yellowPath, yellowPaint);
 
-    // 1. Red Top Arc (~ -45 deg to 55 deg equivalent / counter-clockwise)
-    paint.color = red;
-    canvas.drawArc(rect, -math.pi * 0.75, math.pi * 0.52, false, paint);
+    // 4. Red path
+    final redPaint = Paint()
+      ..color = const Color(0xFFEA4335)
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+    final redPath = Path()
+      ..moveTo(12.0, 4.75)
+      ..cubicTo(13.77, 4.75, 15.35, 5.36, 16.6, 6.55)
+      ..lineTo(20.02, 3.13)
+      ..cubicTo(17.95, 1.19, 15.24, 0.0, 12.0, 0.0)
+      ..cubicTo(7.33, 0.0, 3.26, 2.64, 1.25, 6.58)
+      ..lineTo(5.28, 9.73)
+      ..cubicTo(6.23, 6.9, 8.88, 4.75, 12.0, 4.75)
+      ..close();
+    canvas.drawPath(redPath, redPaint);
 
-    // 2. Yellow Left Arc
-    paint.color = yellow;
-    canvas.drawArc(rect, -math.pi * 1.23, math.pi * 0.48, false, paint);
-
-    // 3. Green Bottom Arc
-    paint.color = green;
-    canvas.drawArc(rect, math.pi * 0.25, math.pi * 0.52, false, paint);
-
-    // 4. Blue Right Arc
-    paint.color = blue;
-    canvas.drawArc(rect, -math.pi * 0.23, math.pi * 0.48, false, paint);
-
-    // 5. Blue Horizontal Crossbar
-    final barPaint = Paint()
-      ..color = blue
-      ..style = PaintingStyle.fill;
-
-    final barHeight = strokeWidth;
-    final barWidth = radius + (strokeWidth / 2);
-    final barRect = Rect.fromLTWH(
-      cx,
-      cy - (barHeight / 2),
-      barWidth * 0.95,
-      barHeight,
-    );
-    canvas.drawRect(barRect, barPaint);
+    canvas.restore();
   }
 
   @override

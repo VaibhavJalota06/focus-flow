@@ -32,9 +32,26 @@ class TaskTrackerApp extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final authState = ref.watch(authProvider);
 
-    final showMainApp = settings.onboardingCompleted &&
-        authState.user != null &&
-        !authState.user!.isGuest;
+    // If still actively loading stored user session on cold start, show clean loading surface
+    if (authState.isLoading && authState.user == null) {
+      return MaterialApp(
+        title: 'Focus Flow',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: settings.themeMode,
+        home: Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(
+              color: AppTheme.primarySeed,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final isUserLoggedIn = authState.user != null && !authState.user!.isGuest;
+    final showMainApp = isUserLoggedIn || settings.onboardingCompleted;
 
     return MaterialApp(
       title: 'Focus Flow',

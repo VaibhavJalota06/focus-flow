@@ -66,13 +66,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final userJson = prefs.getString(_userStorageKey);
       if (userJson != null && userJson.isNotEmpty) {
         final user = UserModel.fromJson(userJson);
-        if (user.id == 'usr_demo_88' || user.email.contains('alex.rivers')) {
-          await prefs.remove(_userStorageKey);
-          await prefs.remove('onboarding_completed');
-          state = state.copyWith(clearUser: true, isLoading: false, clearError: true);
-        } else {
-          state = state.copyWith(user: user, isLoading: false, clearError: true);
-          // Trigger background sync if user was restored
+        state = state.copyWith(user: user, isLoading: false, clearError: true);
+        if (!user.isGuest) {
+          await prefs.setBool('onboardingCompleted', true);
           CloudSyncService.instance.syncAll();
         }
       } else {
@@ -396,6 +392,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _persistUser(UserModel user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userStorageKey, user.toJson());
+    if (!user.isGuest) {
+      await prefs.setBool('onboardingCompleted', true);
+    }
   }
 }
 

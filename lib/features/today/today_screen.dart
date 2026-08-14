@@ -108,90 +108,120 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Greeting & Streak Badge
+                      // 1. Top Bar Row: Profile Avatar + Greeting on Left, Streak on Right
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${_getGreeting()}, ${userSettings.userName} 👋',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  DateFormat('EEEE, MMMM d').format(DateTime.now()),
-                                  style: theme.textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: -0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-
-                          // Streak Badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFF6B00).withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: const Color(0xFFFF6B00).withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const Text('🔥', style: TextStyle(fontSize: 14)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${analytics.currentStreak} Day Streak',
-                                  style: const TextStyle(
-                                    color: Color(0xFFFF6B00),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-
-                          // Profile Avatar Button
+                          // User Profile Button with Avatar & Name
                           InkWell(
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(builder: (_) => const ProfileScreen()),
                               );
                             },
-                            borderRadius: BorderRadius.circular(24),
-                            child: Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.7),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                                  width: 2,
-                                ),
-                              ),
-                              child: UserAvatarWidget(
-                                avatarUrl: ref.watch(authProvider).user?.avatarUrl,
-                                fallbackName: ref.watch(authProvider).user?.name,
-                                size: 38,
-                                fontSize: 20,
+                            borderRadius: BorderRadius.circular(28),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 42,
+                                    height: 42,
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.7),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: UserAvatarWidget(
+                                      avatarUrl: ref.watch(authProvider).user?.avatarUrl,
+                                      fallbackName: ref.watch(authProvider).user?.name ?? userSettings.userName,
+                                      size: 38,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${_getGreeting()},',
+                                        style: theme.textTheme.labelMedium?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      Text(
+                                        userSettings.userName.isNotEmpty ? userSettings.userName : 'There',
+                                        style: theme.textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ),
+
+                          // Streak Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: analytics.currentStreak > 0
+                                  ? const Color(0xFFFF6B00).withValues(alpha: 0.12)
+                                  : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: analytics.currentStreak > 0
+                                    ? const Color(0xFFFF6B00).withValues(alpha: 0.35)
+                                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('🔥', style: TextStyle(fontSize: 15)),
+                                const SizedBox(width: 5),
+                                Text(
+                                  analytics.currentStreak == 1
+                                      ? '1 Day Streak'
+                                      : '${analytics.currentStreak} Days Streak',
+                                  style: TextStyle(
+                                    color: analytics.currentStreak > 0
+                                        ? const Color(0xFFFF6B00)
+                                        : theme.colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      // 2. Main Date Headline (Spacious & Clean)
+                      Text(
+                        DateFormat('EEEE, MMMM d').format(DateTime.now()),
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        totalCount > 0
+                            ? '$completedCount of $totalCount tasks completed today'
+                            : 'No tasks scheduled yet for today',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
 
                       const SizedBox(height: 20),

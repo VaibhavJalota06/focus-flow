@@ -65,6 +65,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       final user = ref.read(authProvider).user;
       if (user != null) {
         await ref.read(settingsProvider.notifier).updateUserName(user.name);
+        await ref.read(settingsProvider.notifier).completeOnboarding();
       }
       if (!mounted) return;
       messenger.showSnackBar(
@@ -99,6 +100,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       final user = ref.read(authProvider).user;
       if (user != null) {
         await ref.read(settingsProvider.notifier).updateUserName(user.name);
+        await ref.read(settingsProvider.notifier).completeOnboarding();
       }
       if (!mounted) return;
       messenger.showSnackBar(
@@ -126,6 +128,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       final user = ref.read(authProvider).user;
       if (user != null && !user.isGuest) {
         await ref.read(settingsProvider.notifier).updateUserName(user.name);
+        await ref.read(settingsProvider.notifier).completeOnboarding();
         if (!mounted) return;
         messenger.showSnackBar(
           SnackBar(

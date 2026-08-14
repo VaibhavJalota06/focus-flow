@@ -7,7 +7,15 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+# Cancel any in-progress run for the same branch / PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # ────────────────────────────────────────────
+  #  iOS — unsigned IPA (no Apple certs required)
+  # ────────────────────────────────────────────
   build-ios:
     name: Build iOS IPA
     runs-on: macos-latest
@@ -16,7 +24,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Flutter
+      - name: Set up Flutter (stable, cached)
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
@@ -25,10 +33,18 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build iOS App Bundle
-        run: flutter build ios --release --no-codesign --no-tree-shake-icons
+      - name: Run Flutter Analyser
+        run: flutter analyze --no-fatal-infos
 
-      - name: Package Payload into IPA
+      - name: Build iOS Release (no codesign)
+        run: |
+          flutter build ios \
+            --release \
+            --no-codesign \
+            --no-tree-shake-icons \
+            --build-number=${{ github.run_number }}
+
+      - name: Package .app into IPA
         run: |
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
@@ -38,25 +54,28 @@ jobs:
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FocusFlow-iOS-IPA
+          name: FocusFlow-iOS-IPA-${{ github.run_number }}
           path: FocusFlow.ipa
-          retention-days: 14
+          retention-days: 30
 
+  # ────────────────────────────────────────────
+  #  Android — release APK + AAB (split by ABI)
+  # ────────────────────────────────────────────
   build-android:
-    name: Build Android APK
+    name: Build Android APK & AAB
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK
+      - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Set up Flutter
+      - name: Set up Flutter (stable, cached)
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
@@ -65,12 +84,51 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build Android Release APK
-        run: flutter build apk --release --no-tree-shake-icons
+      - name: Run Flutter Analyser
+        run: flutter analyze --no-fatal-infos
 
-      - name: Upload APK Artifact
+      # Build a universal APK (easy to side-load for testing)
+      - name: Build Android Release APK
+        run: |
+          flutter build apk \
+            --release \
+            --no-tree-shake-icons \
+            --build-number=${{ github.run_number }}
+
+      # Build per-ABI split APKs (smaller downloads)
+      - name: Build Android Split APKs
+        run: |
+          flutter build apk \
+            --release \
+            --split-per-abi \
+            --no-tree-shake-icons \
+            --build-number=${{ github.run_number }}
+
+      # Build AAB for Play Store submission
+      - name: Build Android App Bundle (AAB)
+        run: |
+          flutter build appbundle \
+            --release \
+            --no-tree-shake-icons \
+            --build-number=${{ github.run_number }}
+
+      - name: Upload Universal APK
         uses: actions/upload-artifact@v4
         with:
-          name: FocusFlow-Android-APK
+          name: FocusFlow-Android-APK-universal-${{ github.run_number }}
           path: build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 14
+          retention-days: 30
+
+      - name: Upload Split APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: FocusFlow-Android-APK-split-${{ github.run_number }}
+          path: build/app/outputs/flutter-apk/app-*-release.apk
+          retention-days: 30
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: FocusFlow-Android-AAB-${{ github.run_number }}
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30

@@ -43,8 +43,10 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_getAppBarTitle(_currentIndex)),
+      appBar: _currentIndex == 0
+          ? null
+          : AppBar(
+              title: Text(_getAppBarTitle(_currentIndex)),
         actions: [
           // Flame Streak Badge
           Container(
