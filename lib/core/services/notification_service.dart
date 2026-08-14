@@ -19,8 +19,18 @@ class NotificationService {
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
+    const darwinSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
+    );
     const initSettings = InitializationSettings(
       android: androidSettings,
+      iOS: darwinSettings,
+      macOS: darwinSettings,
     );
 
     await _notificationsPlugin.initialize(
@@ -58,6 +68,19 @@ class NotificationService {
       }
     }
 
+    // Request permissions for iOS / macOS explicitly
+    final iosImplementation =
+        _notificationsPlugin.resolvePlatformSpecificImplementation<
+            DarwinFlutterLocalNotificationsPlugin>();
+
+    if (iosImplementation != null) {
+      await iosImplementation.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
+
     _isInitialized = true;
   }
 
@@ -76,12 +99,23 @@ class NotificationService {
       enableVibration: true,
     );
 
-    const details = NotificationDetails(android: androidDetails);
+    const darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      interruptionLevel: InterruptionLevel.active,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+      macOS: darwinDetails,
+    );
     await _notificationsPlugin.show(id, title, body, details);
   }
 
   Future<void> scheduleTaskReminder(TaskModel task) async {
-    if (task.reminderTime == null || task.dueTime == null) return;
+    if (task.dueTime == null) return;
 
     final parts = task.dueTime!.split(':');
     if (parts.length != 2) return;
@@ -98,17 +132,29 @@ class NotificationService {
     );
 
     int offsetMinutes = 0;
-    if (task.reminderTime == '10_MIN_BEFORE') {
+    final reminder = task.reminderTime ?? 'EXACT';
+    if (reminder == '10_MIN_BEFORE') {
       offsetMinutes = 10;
-    } else if (task.reminderTime == '30_MIN_BEFORE') {
+    } else if (reminder == '30_MIN_BEFORE') {
       offsetMinutes = 30;
-    } else if (task.reminderTime == '1_HOUR_BEFORE') {
+    } else if (reminder == '1_HOUR_BEFORE') {
       offsetMinutes = 60;
     }
 
-    final reminderDateTime =
+    var reminderDateTime =
         dueDateTime.subtract(Duration(minutes: offsetMinutes));
-    if (reminderDateTime.isBefore(DateTime.now())) return;
+    
+    // If the reminder is in the past for today's date, roll forward to tomorrow at same time
+    if (reminderDateTime.isBefore(DateTime.now())) {
+      final now = DateTime.now();
+      if (task.date.year == now.year &&
+          task.date.month == now.month &&
+          task.date.day == now.day) {
+        reminderDateTime = reminderDateTime.add(const Duration(days: 1));
+      } else {
+        return;
+      }
+    }
 
     final tzDateTime = tz.TZDateTime.from(reminderDateTime, tz.local);
     final notificationId = task.id.hashCode.abs();
@@ -125,7 +171,18 @@ class NotificationService {
       ],
     );
 
-    const details = NotificationDetails(android: androidDetails);
+    const darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      interruptionLevel: InterruptionLevel.active,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+      macOS: darwinDetails,
+    );
 
     await _notificationsPlugin.zonedSchedule(
       notificationId,
@@ -157,7 +214,18 @@ class NotificationService {
       ],
     );
 
-    const details = NotificationDetails(android: androidDetails);
+    const darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      interruptionLevel: InterruptionLevel.active,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+      macOS: darwinDetails,
+    );
 
     await _notificationsPlugin.zonedSchedule(
       notificationId,

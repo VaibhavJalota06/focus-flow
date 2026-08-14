@@ -87,7 +87,7 @@ jobs:
       - name: Run Flutter Analyser
         run: flutter analyze --no-fatal-infos
 
-      # Build a universal APK (easy to side-load for testing)
+      # Build Release APK
       - name: Build Android Release APK
         run: |
           flutter build apk \
@@ -95,40 +95,9 @@ jobs:
             --no-tree-shake-icons \
             --build-number=${{ github.run_number }}
 
-      # Build per-ABI split APKs (smaller downloads)
-      - name: Build Android Split APKs
-        run: |
-          flutter build apk \
-            --release \
-            --split-per-abi \
-            --no-tree-shake-icons \
-            --build-number=${{ github.run_number }}
-
-      # Build AAB for Play Store submission
-      - name: Build Android App Bundle (AAB)
-        run: |
-          flutter build appbundle \
-            --release \
-            --no-tree-shake-icons \
-            --build-number=${{ github.run_number }}
-
-      - name: Upload Universal APK
+      - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FocusFlow-Android-APK-universal-${{ github.run_number }}
+          name: FocusFlow-Android-APK-${{ github.run_number }}
           path: build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 30
-
-      - name: Upload Split APKs
-        uses: actions/upload-artifact@v4
-        with:
-          name: FocusFlow-Android-APK-split-${{ github.run_number }}
-          path: build/app/outputs/flutter-apk/app-*-release.apk
-          retention-days: 30
-
-      - name: Upload AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: FocusFlow-Android-AAB-${{ github.run_number }}
-          path: build/app/outputs/bundle/release/app-release.aab
           retention-days: 30

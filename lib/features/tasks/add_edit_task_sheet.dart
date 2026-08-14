@@ -107,8 +107,12 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
   }
 
   void _saveTask() {
+    FocusScope.of(context).unfocus();
     final title = _titleController.text.trim();
     if (title.isEmpty) return;
+
+    final finalReminderTime =
+        (_dueTime != null && _reminderTime == null) ? 'EXACT' : _reminderTime;
 
     final notifier = ref.read(taskProvider.notifier);
 
@@ -124,7 +128,7 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
         dueTime: _dueTime,
         priority: _priority,
         categoryId: _categoryId,
-        reminderTime: _reminderTime,
+        reminderTime: finalReminderTime,
         recurrenceRule: _recurrenceRule,
         notes: _notesController.text.trim(),
         isInbox: _isInbox,
@@ -140,7 +144,7 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
         dueTime: _dueTime,
         priority: _priority,
         categoryId: _categoryId,
-        reminderTime: _reminderTime,
+        reminderTime: finalReminderTime,
         recurrenceRule: _recurrenceRule,
         notes: _notesController.text.trim(),
         isInbox: _isInbox,
@@ -150,6 +154,7 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
   }
 
   Future<void> _pickDate() async {
+    FocusScope.of(context).unfocus();
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
@@ -162,6 +167,7 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
   }
 
   Future<void> _pickTime({required bool isDue}) async {
+    FocusScope.of(context).unfocus();
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -172,6 +178,9 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
       setState(() {
         if (isDue) {
           _dueTime = formatted;
+          if (_reminderTime == null) {
+            _reminderTime = 'EXACT';
+          }
         } else {
           _startTime = formatted;
         }
@@ -190,14 +199,21 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            children: [
+        return GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
               // Sheet Header handle
               Center(
                 child: Container(
@@ -576,8 +592,8 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
