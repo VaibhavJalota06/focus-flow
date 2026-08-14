@@ -65,10 +65,24 @@ class SupabaseService {
     }
   }
 
-  /// Native Google Sign-In with automatic Supabase OAuth fallback
+  /// Google Sign-In with platform-optimized handling (OAuth on iOS to prevent GIDClientID crash, Native 1-Tap on Android)
   Future<UserModel?> signInWithGoogleNative() async {
+    // On iOS: Use Supabase OAuth (ASWebAuthenticationSession) to prevent native GIDClientID crash
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      debugPrint('[SupabaseService] iOS detected: Launching Supabase Google OAuth...');
+      if (isLiveConfigured && _isInitialized) {
+        await client.auth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: redirectCallbackUrl,
+          authScreenLaunchMode: LaunchMode.platformDefault,
+        );
+        return null;
+      }
+    }
+
+    // On Android: Use Native Google Play Services 1-Tap with OAuth fallback
     try {
-      debugPrint('[SupabaseService] Starting native Google Sign-In...');
+      debugPrint('[SupabaseService] Starting Android Google Sign-In...');
       try {
         await _googleSignIn.signOut();
       } catch (_) {}
@@ -110,7 +124,7 @@ class SupabaseService {
     } catch (e) {
       debugPrint('[SupabaseService] Native Google Sign-In failed ($e). Attempting Supabase OAuth fallback...');
       
-      // Fallback: Launch Supabase Google OAuth Web flow
+      // Fallback: Launch Supabase Google OAuth
       if (isLiveConfigured && _isInitialized) {
         try {
           await client.auth.signInWithOAuth(
@@ -118,7 +132,7 @@ class SupabaseService {
             redirectTo: redirectCallbackUrl,
             authScreenLaunchMode: LaunchMode.platformDefault,
           );
-          return null; // The OAuth redirect will be handled by the auth state listener
+          return null;
         } catch (oauthErr) {
           debugPrint('[SupabaseService] Supabase Google OAuth fallback error: $oauthErr');
           rethrow;
