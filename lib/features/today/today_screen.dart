@@ -94,13 +94,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         alignment: Alignment.topCenter,
         children: [
           SafeArea(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                await ref.read(taskProvider.notifier).loadTasks();
-              },
-              child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              slivers: [
               // Header Sliver
               SliverPadding(
                 padding: const EdgeInsets.all(20),
@@ -387,7 +385,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             ],
           ),
         ),
-      ),
         ConfettiWidget(
           confettiController: _confettiController,
           blastDirectionality: BlastDirectionality.explosive,

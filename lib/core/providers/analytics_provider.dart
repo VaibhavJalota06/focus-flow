@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/task_model.dart';
 import 'task_provider.dart';
+import 'streak_provider.dart';
 import 'focus_provider.dart';
 
 class ProductivityStats {
@@ -115,61 +116,11 @@ final analyticsProvider = Provider<ProductivityStats>((ref) {
       .where((s) => !s.startedAt.isBefore(monthStart))
       .fold(0, (sum, s) => sum + s.durationMinutes);
 
-  // Heatmap & Streak calculation
-  final heatmap = <DateTime, int>{};
-  for (int i = 0; i < 30; i++) {
-    final day = today.subtract(Duration(days: i));
-    final count = tasks
-        .where((t) =>
-            t.isCompleted &&
-            t.completedAt != null &&
-            t.completedAt!.year == day.year &&
-            t.completedAt!.month == day.month &&
-            t.completedAt!.day == day.day)
-        .length;
-    heatmap[day] = count;
-  }
-
-  int currentStreak = 0;
-  int checkIndex = 0;
-  // Check today or yesterday as start
-  while (true) {
-    final d = today.subtract(Duration(days: checkIndex));
-    final hasCompleted = tasks.any((t) =>
-        t.isCompleted &&
-        t.completedAt != null &&
-        t.completedAt!.year == d.year &&
-        t.completedAt!.month == d.month &&
-        t.completedAt!.day == d.day);
-
-    if (hasCompleted) {
-      currentStreak++;
-      checkIndex++;
-    } else if (checkIndex == 0) {
-      // If no tasks completed today yet, check yesterday
-      checkIndex++;
-    } else {
-      break;
-    }
-  }
-
-  int longestStreak = currentStreak;
-  int tempStreak = 0;
-  for (int i = 0; i < 60; i++) {
-    final d = today.subtract(Duration(days: i));
-    final hasCompleted = tasks.any((t) =>
-        t.isCompleted &&
-        t.completedAt != null &&
-        t.completedAt!.year == d.year &&
-        t.completedAt!.month == d.month &&
-        t.completedAt!.day == d.day);
-    if (hasCompleted) {
-      tempStreak++;
-      if (tempStreak > longestStreak) longestStreak = tempStreak;
-    } else {
-      tempStreak = 0;
-    }
-  }
+  // Unified Heatmap & Streak from streakProvider
+  final streakState = ref.watch(streakProvider);
+  final heatmap = streakState.heatmapData;
+  final currentStreak = streakState.currentStreak;
+  final longestStreak = streakState.highestStreak;
 
   // Calculate Productivity Score (0-100)
   // 1. Task completion rate component (up to 50 pts)

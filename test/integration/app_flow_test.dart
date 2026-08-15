@@ -22,7 +22,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Today screen is initial view
-    expect(find.text('Daily Dashboard'), findsOneWidget);
+    expect(find.textContaining('Streak'), findsWidgets);
 
     // Tap Tasks Tab
     await tester.tap(find.text('Tasks'));

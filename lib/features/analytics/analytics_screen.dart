@@ -408,41 +408,140 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
             ),
 
             const SizedBox(height: 16),
-            const Text(
-              'Past 30 Days Activity Heatmap',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 8),
-
-            // Heatmap Grid (30 squares)
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: stats.heatmapData.entries.map((entry) {
-                final count = entry.value;
-                Color squareColor;
-                if (count == 0) {
-                  squareColor = theme.colorScheme.outlineVariant.withValues(alpha: 0.3);
-                } else if (count <= 2) {
-                  squareColor = Colors.green.shade200;
-                } else if (count <= 5) {
-                  squareColor = Colors.green.shade400;
-                } else {
-                  squareColor = Colors.green.shade700;
-                }
-
-                return Tooltip(
-                  message: '${entry.key.month}/${entry.key.day}: $count completed',
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: squareColor,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Activity Heatmap',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
+                ),
+                Text(
+                  'Past 30 Days → Today',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colorScheme.outline,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // Heatmap Grid (30 squares chronologically ordered from past to today)
+            Builder(
+              builder: (context) {
+                final now = DateTime.now();
+                return Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: stats.heatmapData.entries.map((entry) {
+                    final isToday = entry.key.year == now.year &&
+                        entry.key.month == now.month &&
+                        entry.key.day == now.day;
+                    final count = entry.value;
+                    Color squareColor;
+                    if (count == 0) {
+                      squareColor = isToday
+                          ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                          : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
+                    } else if (count == 1) {
+                      squareColor = const Color(0xFF4ADE80); // Light Emerald
+                    } else if (count <= 3) {
+                      squareColor = const Color(0xFF22C55E); // Vibrant Emerald
+                    } else {
+                      squareColor = const Color(0xFF16A34A); // Deep Green
+                    }
+
+                    return Tooltip(
+                      message: isToday
+                          ? 'Today (${entry.key.month}/${entry.key.day}): $count completed'
+                          : '${entry.key.month}/${entry.key.day}: $count completed',
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: squareColor,
+                          borderRadius: BorderRadius.circular(6),
+                          border: isToday
+                              ? Border.all(
+                                  color: theme.colorScheme.primary,
+                                  width: 1.5,
+                                )
+                              : null,
+                        ),
+                        child: isToday && count == 0
+                            ? Center(
+                                child: Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              )
+                            : null,
+                      ),
+                    );
+                  }).toList(),
                 );
-              }).toList(),
+              },
+            ),
+
+            const SizedBox(height: 12),
+            // Legend
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  'Less',
+                  style: TextStyle(fontSize: 10, color: theme.colorScheme.outline),
+                ),
+                const SizedBox(width: 4),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 3),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4ADE80),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 3),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF22C55E),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 3),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF16A34A),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'More',
+                  style: TextStyle(fontSize: 10, color: theme.colorScheme.outline),
+                ),
+              ],
             ),
           ],
         ),

@@ -236,6 +236,7 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
     final updated = task.copyWith(
       isCompleted: isCompleted,
       completedAt: isCompleted ? DateTime.now() : null,
+      clearCompletedAt: !isCompleted,
       updatedAt: DateTime.now(),
     );
 
@@ -267,10 +268,12 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
     }).toList();
 
     final allDone = updatedSubtasks.isNotEmpty && updatedSubtasks.every((s) => s.isCompleted);
+    final bool newCompleted = allDone;
     final updatedTask = task.copyWith(
       subtasks: updatedSubtasks,
-      isCompleted: allDone ? true : task.isCompleted,
-      completedAt: allDone ? DateTime.now() : task.completedAt,
+      isCompleted: newCompleted,
+      completedAt: newCompleted ? (task.completedAt ?? DateTime.now()) : null,
+      clearCompletedAt: !newCompleted,
     );
 
     if (allDone && !task.isCompleted) {
