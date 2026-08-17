@@ -97,17 +97,19 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         index: _currentIndex,
         children: _screens,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (_) => const AddEditTaskSheet(),
-          );
-        },
-        tooltip: 'Add Task (<5s)',
-        child: const Icon(Icons.add_rounded, size: 28),
-      ),
+      floatingActionButton: (_currentIndex == 3 || _currentIndex == 4)
+          ? null
+          : FloatingActionButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (_) => const AddEditTaskSheet(),
+                );
+              },
+              tooltip: 'Add Task (<5s)',
+              child: const Icon(Icons.add_rounded, size: 28),
+            ),
       bottomNavigationBar: SafeArea(
         child: Container(
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
