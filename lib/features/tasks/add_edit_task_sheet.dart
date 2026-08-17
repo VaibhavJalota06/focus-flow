@@ -63,9 +63,30 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
 
   Future<void> _initSpeech() async {
     try {
-      _speechEnabled = await _speechToText.initialize();
+      _speechEnabled = await _speechToText.initialize(
+        onStatus: (status) {
+          debugPrint('[SpeechToText] Status: $status');
+          if (status == 'notListening' || status == 'done') {
+            if (mounted) setState(() => _isListening = false);
+          }
+        },
+        onError: (errorNotification) {
+          debugPrint('[SpeechToText] Error: ${errorNotification.errorMsg}');
+          if (mounted) {
+            setState(() => _isListening = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Speech error: ${errorNotification.errorMsg}'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        },
+      );
       if (mounted) setState(() {});
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[SpeechToText] Init failed: $e');
+    }
   }
 
   void _toggleListening() async {
@@ -74,15 +95,21 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
       if (mounted) setState(() => _isListening = false);
     } else {
       if (!_speechEnabled) {
-        _speechEnabled = await _speechToText.initialize();
+        await _initSpeech();
       }
       if (_speechEnabled) {
         if (mounted) setState(() => _isListening = true);
         await _speechToText.listen(
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 4),
+          partialResults: true,
           onResult: (result) {
-            if (mounted) {
+            if (mounted && result.recognizedWords.isNotEmpty) {
               setState(() {
                 _titleController.text = result.recognizedWords;
+                _titleController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _titleController.text.length),
+                );
               });
             }
           },
@@ -90,7 +117,10 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Voice recognition not available on this device')),
+            const SnackBar(
+              content: Text('🎙️ Voice dictation unavailable on this device or platform'),
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         }
       }
@@ -260,6 +290,34 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
                 child: ListView(
                   controller: scrollController,
                   children: [
+                    if (_isListening)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.graphic_eq_rounded, color: Colors.red, size: 20),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '🎙️ Listening... Speak your task title now!',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
                     // Task Title Input (Autofocused)
                     TextField(
                       controller: _titleController,
