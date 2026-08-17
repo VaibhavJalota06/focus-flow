@@ -43,7 +43,30 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
     final recurringMasterTasks =
         currentTasks.where((t) => t.recurrenceRule != null && !t.isInbox).toList();
 
+    if (recurringMasterTasks.isEmpty) return;
+
+    // Deduplicate master generators per title (case-insensitive) to resolve any legacy duplicate masters
+    final Map<String, TaskModel> uniqueMasters = {};
     for (final task in recurringMasterTasks) {
+      final key = task.title.trim().toLowerCase();
+      if (!uniqueMasters.containsKey(key)) {
+        uniqueMasters[key] = task;
+      } else {
+        // Strip recurrence from legacy duplicates
+        final cleared = task.copyWith(
+          clearRecurrenceRule: true,
+          updatedAt: DateTime.now(),
+        );
+        await _repository.updateTask(cleared);
+        CloudSyncService.instance.uploadTask(cleared);
+      }
+    }
+
+    bool needsReload = false;
+
+    for (final task in uniqueMasters.values) {
+      final taskDay = DateTime(task.date.year, task.date.month, task.date.day);
+
       bool shouldGenerateToday = false;
       final rule = task.recurrenceRule!.toUpperCase();
 
@@ -64,27 +87,43 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
 
       if (shouldGenerateToday) {
         final hasInstanceToday = currentTasks.any((t) =>
-            t.title == task.title &&
+            t.title.trim().toLowerCase() == task.title.trim().toLowerCase() &&
             t.date.year == today.year &&
             t.date.month == today.month &&
             t.date.day == today.day);
 
-        if (!hasInstanceToday) {
+        if (!hasInstanceToday && taskDay.isBefore(today)) {
           final newInstance = task.copyWith(
             id: const Uuid().v4(),
             date: today,
             isCompleted: false,
-            completedAt: null,
+            clearCompletedAt: true,
+            clearRecurrenceRule: true, // Instance itself is NOT a recurring master generator
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
           );
           await _repository.insertTask(newInstance);
+          CloudSyncService.instance.uploadTask(newInstance);
+          needsReload = true;
         }
+      }
+
+      // Update master task's date to today if it was before today so it won't repeatedly re-generate on today
+      if (taskDay.isBefore(today)) {
+        final updatedMaster = task.copyWith(
+          date: today,
+          updatedAt: DateTime.now(),
+        );
+        await _repository.updateTask(updatedMaster);
+        CloudSyncService.instance.uploadTask(updatedMaster);
+        needsReload = true;
       }
     }
 
-    final updatedList = await _repository.getTasks();
-    state = updatedList;
+    if (needsReload) {
+      final updatedList = await _repository.getTasks();
+      state = updatedList;
+    }
   }
 
   Future<TaskModel> addTask({
@@ -287,6 +326,37 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
 
   Future<void> updateTask(TaskModel updatedTask) async {
     await _repository.updateTask(updatedTask);
+
+    // Sync recurrence rule changes across all sibling tasks with matching title
+    final allTasks = await _repository.getTasks();
+    final matchingTasks = allTasks.where((t) =>
+        t.id != updatedTask.id &&
+        t.title.trim().toLowerCase() == updatedTask.title.trim().toLowerCase()).toList();
+
+    for (final sibling in matchingTasks) {
+      if (updatedTask.recurrenceRule == null) {
+        // User turned off repeat for this task -> clear recurrenceRule on all siblings
+        if (sibling.recurrenceRule != null) {
+          final clearedSibling = sibling.copyWith(
+            clearRecurrenceRule: true,
+            updatedAt: DateTime.now(),
+          );
+          await _repository.updateTask(clearedSibling);
+          CloudSyncService.instance.uploadTask(clearedSibling);
+        }
+      } else {
+        // User updated recurrence rule -> sync rule across siblings
+        if (sibling.recurrenceRule != updatedTask.recurrenceRule) {
+          final updatedSibling = sibling.copyWith(
+            recurrenceRule: updatedTask.recurrenceRule,
+            updatedAt: DateTime.now(),
+          );
+          await _repository.updateTask(updatedSibling);
+          CloudSyncService.instance.uploadTask(updatedSibling);
+        }
+      }
+    }
+
     if (updatedTask.reminderTime != null) {
       await NotificationService.instance.scheduleTaskReminder(updatedTask);
     }
@@ -295,8 +365,37 @@ class TaskNotifier extends StateNotifier<List<TaskModel>> {
   }
 
   Future<void> deleteTask(String taskId) async {
+    final taskToDelete = state.firstWhere(
+      (t) => t.id == taskId,
+      orElse: () => TaskModel(
+        id: '',
+        title: '',
+        date: DateTime.now(),
+        categoryId: '',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
     await _repository.deleteTask(taskId);
     CloudSyncService.instance.deleteTask(taskId);
+
+    if (taskToDelete.id.isNotEmpty) {
+      // If deleted task had recurrence or matching recurring siblings, clear recurrenceRule on siblings
+      final remaining = await _repository.getTasks();
+      final siblings = remaining.where((t) =>
+          t.title.trim().toLowerCase() == taskToDelete.title.trim().toLowerCase() &&
+          t.recurrenceRule != null).toList();
+      for (final sibling in siblings) {
+        final cleared = sibling.copyWith(
+          clearRecurrenceRule: true,
+          updatedAt: DateTime.now(),
+        );
+        await _repository.updateTask(cleared);
+        CloudSyncService.instance.uploadTask(cleared);
+      }
+    }
+
     await loadTasks();
   }
 

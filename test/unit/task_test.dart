@@ -54,5 +54,26 @@ void main() {
       final tomorrow = DateTime.now().add(const Duration(days: 1));
       expect(parsed.date.day, equals(tomorrow.day));
     });
+
+    test('TaskModel copyWith clears recurrenceRule when clearRecurrenceRule is true', () {
+      final now = DateTime.now();
+      final recurringTask = TaskModel(
+        id: 'rec-1',
+        title: 'Daily Exercise',
+        date: now,
+        categoryId: 'fitness',
+        recurrenceRule: 'DAILY',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      expect(recurringTask.recurrenceRule, equals('DAILY'));
+
+      final nonRecurringTask = recurringTask.copyWith(
+        clearRecurrenceRule: true,
+      );
+
+      expect(nonRecurringTask.recurrenceRule, isNull);
+    });
   });
 }
