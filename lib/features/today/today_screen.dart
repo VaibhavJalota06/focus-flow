@@ -736,6 +736,47 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                                           ],
                                         ),
                                       ),
+                                    if (task.recurrenceRule != null)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary
+                                              .withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: theme.colorScheme.primary
+                                                .withValues(alpha: 0.25),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.repeat_rounded,
+                                              size: 12,
+                                              color: theme.colorScheme.primary,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              task.recurrenceRule == 'DAILY'
+                                                  ? 'Every Day'
+                                                  : (task.recurrenceRule == 'WEEKDAYS'
+                                                      ? 'Weekdays'
+                                                      : (task.recurrenceRule == 'WEEKLY'
+                                                          ? 'Weekly'
+                                                          : (task.recurrenceRule == 'MONTHLY'
+                                                              ? 'Monthly'
+                                                              : 'Repeating'))),
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                                color: theme.colorScheme.primary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ],
