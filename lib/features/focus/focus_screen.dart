@@ -37,7 +37,7 @@ class FocusScreen extends ConsumerWidget {
                       showCheckmark: false,
                       selectedColor: theme.colorScheme.primary,
                       label: Text(
-                        '25m Pomodoro',
+                        '⚡ 25m Sprint Mode',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -54,7 +54,7 @@ class FocusScreen extends ConsumerWidget {
                       showCheckmark: false,
                       selectedColor: theme.colorScheme.primary,
                       label: Text(
-                        '5m Break',
+                        '☕ 5m Quick Recharge',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -71,7 +71,7 @@ class FocusScreen extends ConsumerWidget {
                       showCheckmark: false,
                       selectedColor: theme.colorScheme.primary,
                       label: Text(
-                        '50m Focus',
+                        '🚀 50m Deep Flow',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
