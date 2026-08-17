@@ -386,7 +386,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
               children: [
                 Row(
                   children: [
-                    const Text('🔥', style: TextStyle(fontSize: 20)),
+                    const Text('⚡', style: TextStyle(fontSize: 20)),
                     const SizedBox(width: 8),
                     Text(
                       '$currentStreak Day Streak',

@@ -66,7 +66,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('🔥', style: TextStyle(fontSize: 14)),
+                const Text('⚡', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 4),
                 Text(
                   '${streakState.currentStreak}d',
