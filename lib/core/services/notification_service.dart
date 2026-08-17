@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -23,11 +24,11 @@ class NotificationService {
       DarwinNotificationCategory(
         'task_reminder_category',
         actions: <DarwinNotificationAction>[
-          DarwinNotificationAction.plain('snooze_15', 'Snooze 15m'),
-          DarwinNotificationAction.plain('snooze_1h', 'Snooze 1 hour'),
+          DarwinNotificationAction.plain('snooze_15', '⏰ Snooze 15m'),
+          DarwinNotificationAction.plain('snooze_1h', '⏳ Snooze 1 hour'),
           DarwinNotificationAction.plain(
             'mark_complete',
-            'Mark Completed',
+            '✅ Mark Completed',
             options: <DarwinNotificationActionOption>{
               DarwinNotificationActionOption.foreground,
             },
@@ -113,29 +114,44 @@ class NotificationService {
     required String title,
     required String body,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'daily_task_reminders',
       'Task Reminders',
       channelDescription: 'Notifications for upcoming task deadlines and focus timer',
       importance: Importance.max,
       priority: Priority.high,
+      color: const Color(0xFFFF3355),
+      colorized: true,
+      subText: 'Focus Flow Tracker',
+      category: AndroidNotificationCategory.reminder,
+      visibility: NotificationVisibility.public,
+      styleInformation: BigTextStyleInformation(
+        body,
+        contentTitle: '⚡ $title',
+        summaryText: 'Focus Flow Notification',
+      ),
       playSound: true,
       enableVibration: true,
     );
 
     const darwinDetails = DarwinNotificationDetails(
       presentAlert: true,
+      presentBanner: true,
+      presentList: true,
       presentBadge: true,
       presentSound: true,
-      interruptionLevel: InterruptionLevel.active,
+      interruptionLevel: InterruptionLevel.timeSensitive,
+      categoryIdentifier: 'task_reminder_category',
+      threadIdentifier: 'focus_flow_tasks',
+      subtitle: 'Focus Flow Notification ⚡',
     );
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: darwinDetails,
       macOS: darwinDetails,
     );
-    await _notificationsPlugin.show(id, title, body, details);
+    await _notificationsPlugin.show(id, '⚡ $title', body, details);
   }
 
   Future<void> scheduleTaskReminder(TaskModel task) async {
@@ -183,15 +199,47 @@ class NotificationService {
     final tzDateTime = tz.TZDateTime.from(reminderDateTime, tz.local);
     final notificationId = task.id.hashCode.abs();
 
-    const androidDetails = AndroidNotificationDetails(
+    final priorityEmoji = task.priority == TaskPriority.urgent
+        ? '🔴'
+        : (task.priority == TaskPriority.high ? '🟠' : '⚡');
+
+    final notificationTitle = '$priorityEmoji ${task.title}';
+    final notificationSubtitle = '⏰ Due at ${task.dueTime} • ${task.priority.label.toUpperCase()}';
+
+    final bodyBuffer = StringBuffer();
+    if (task.description.isNotEmpty) {
+      bodyBuffer.writeln('📝 ${task.description}');
+    }
+    bodyBuffer.writeln('🏷️ Category: ${task.categoryId.toUpperCase()}');
+    if (task.subtasks.isNotEmpty) {
+      final done = task.subtasks.where((s) => s.isCompleted).length;
+      bodyBuffer.writeln('📋 Subtasks: $done/${task.subtasks.length} completed');
+    }
+    if (task.notes != null && task.notes!.isNotEmpty) {
+      bodyBuffer.writeln('💬 Note: ${task.notes}');
+    }
+
+    final formattedBody = bodyBuffer.toString().trim();
+
+    final androidDetails = AndroidNotificationDetails(
       'daily_task_reminders',
       'Task Reminders',
       channelDescription: 'Notifications for upcoming task deadlines and focus timer',
-      importance: Importance.high,
+      importance: Importance.max,
       priority: Priority.high,
-      actions: <AndroidNotificationAction>[
-        AndroidNotificationAction('snooze_15', 'Snooze 15m'),
-        AndroidNotificationAction('snooze_1h', 'Snooze 1h'),
+      color: const Color(0xFFFF3355),
+      colorized: true,
+      subText: 'Focus Flow Tracker',
+      category: AndroidNotificationCategory.reminder,
+      visibility: NotificationVisibility.public,
+      styleInformation: BigTextStyleInformation(
+        formattedBody,
+        contentTitle: notificationTitle,
+        summaryText: '${task.priority.label.toUpperCase()} PRIORITY • ${task.categoryId.toUpperCase()}',
+      ),
+      actions: const <AndroidNotificationAction>[
+        AndroidNotificationAction('snooze_15', '⏰ Snooze 15m'),
+        AndroidNotificationAction('snooze_1h', '⏳ Snooze 1h'),
       ],
     );
 
@@ -204,7 +252,7 @@ class NotificationService {
       interruptionLevel: InterruptionLevel.timeSensitive,
       categoryIdentifier: 'task_reminder_category',
       threadIdentifier: 'focus_flow_tasks',
-      subtitle: '${task.priority.label} Priority • ${task.categoryId.toUpperCase()}',
+      subtitle: notificationSubtitle,
     );
 
     final details = NotificationDetails(
@@ -215,10 +263,8 @@ class NotificationService {
 
     await _notificationsPlugin.zonedSchedule(
       notificationId,
-      '⏰ Task Reminder: ${task.title}',
-      task.description.isNotEmpty
-          ? task.description
-          : 'Due at ${task.dueTime}',
+      notificationTitle,
+      formattedBody,
       tzDateTime,
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -231,26 +277,41 @@ class NotificationService {
     final rescheduleTime = DateTime.now().add(snoozeDuration);
     final tzDateTime = tz.TZDateTime.from(rescheduleTime, tz.local);
 
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'daily_task_reminders',
       'Task Reminders',
       channelDescription: 'Notifications for upcoming task deadlines and focus timer',
-      importance: Importance.high,
+      importance: Importance.max,
       priority: Priority.high,
-      actions: <AndroidNotificationAction>[
-        AndroidNotificationAction('snooze_15', 'Snooze 15m'),
-        AndroidNotificationAction('snooze_1h', 'Snooze 1h'),
+      color: const Color(0xFFFF3355),
+      colorized: true,
+      subText: 'Focus Flow Tracker',
+      category: AndroidNotificationCategory.reminder,
+      visibility: NotificationVisibility.public,
+      styleInformation: const BigTextStyleInformation(
+        '⏰ Your task reminder was snoozed and will alert you again shortly.',
+        contentTitle: '⏰ Snoozed Task Reminder',
+        summaryText: 'SNOOZED REMINDER',
+      ),
+      actions: const <AndroidNotificationAction>[
+        AndroidNotificationAction('snooze_15', '⏰ Snooze 15m'),
+        AndroidNotificationAction('snooze_1h', '⏳ Snooze 1h'),
       ],
     );
 
     const darwinDetails = DarwinNotificationDetails(
       presentAlert: true,
+      presentBanner: true,
+      presentList: true,
       presentBadge: true,
       presentSound: true,
-      interruptionLevel: InterruptionLevel.active,
+      interruptionLevel: InterruptionLevel.timeSensitive,
+      categoryIdentifier: 'task_reminder_category',
+      threadIdentifier: 'focus_flow_tasks',
+      subtitle: 'Snoozed Task Reminder ⏰',
     );
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: darwinDetails,
       macOS: darwinDetails,
