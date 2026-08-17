@@ -5,6 +5,7 @@ import '../../core/models/category_model.dart';
 import '../../core/models/task_model.dart';
 import '../../core/providers/category_provider.dart';
 import '../../core/providers/task_provider.dart';
+import '../tasks/add_edit_task_sheet.dart';
 import '../tasks/task_action_sheet.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -156,6 +157,26 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             'No tasks scheduled for this day.',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (_) => AddEditTaskSheet(initialDate: _selectedDay),
+                              );
+                            },
+                            icon: const Icon(Icons.add_rounded, size: 20),
+                            label: const Text('Add Task for this Date'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                             ),
                           ),
                         ],

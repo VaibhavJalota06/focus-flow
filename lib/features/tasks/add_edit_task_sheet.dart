@@ -10,11 +10,13 @@ import '../../core/providers/task_provider.dart';
 class AddEditTaskSheet extends ConsumerStatefulWidget {
   final TaskModel? taskToEdit;
   final bool initialIsInbox;
+  final DateTime? initialDate;
 
   const AddEditTaskSheet({
     super.key,
     this.taskToEdit,
     this.initialIsInbox = false,
+    this.initialDate,
   });
 
   @override
@@ -50,7 +52,7 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
     _descController = TextEditingController(text: t?.description ?? '');
     _notesController = TextEditingController(text: t?.notes ?? '');
 
-    _selectedDate = t?.date ?? DateTime.now();
+    _selectedDate = t?.date ?? widget.initialDate ?? DateTime.now();
     _startTime = t?.startTime;
     _dueTime = t?.dueTime;
     _priority = t?.priority ?? TaskPriority.medium;

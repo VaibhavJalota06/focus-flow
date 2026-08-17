@@ -119,6 +119,7 @@ class FocusNotifier extends StateNotifier<FocusState> {
 
     final repo = ref.read(repositoryProvider);
     await repo.insertFocusSession(session);
+    ref.invalidate(focusSessionsProvider);
 
     await NotificationService.instance.showInstantNotification(
       id: 9999,
