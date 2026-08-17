@@ -97,9 +97,8 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         index: _currentIndex,
         children: _screens,
       ),
-      floatingActionButton: (_currentIndex == 3 || _currentIndex == 4)
-          ? null
-          : FloatingActionButton(
+      floatingActionButton: _currentIndex == 0
+          ? FloatingActionButton(
               onPressed: () {
                 showModalBottomSheet(
                   context: context,
@@ -109,7 +108,8 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
               },
               tooltip: 'Add Task (<5s)',
               child: const Icon(Icons.add_rounded, size: 28),
-            ),
+            )
+          : null,
       bottomNavigationBar: SafeArea(
         child: Container(
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
