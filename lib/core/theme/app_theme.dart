@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AppTheme {
   // Ultra Premium Brand Colors
@@ -28,6 +29,12 @@ class AppTheme {
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       elevation: 0,
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+      ),
       iconTheme: IconThemeData(color: Color(0xFF0F172A)),
       titleTextStyle: TextStyle(
         color: Color(0xFF0F172A),
@@ -154,6 +161,12 @@ class AppTheme {
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       elevation: 0,
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+      ),
       iconTheme: IconThemeData(color: Color(0xFFF8FAFC)),
       titleTextStyle: TextStyle(
         color: Color(0xFFF8FAFC),

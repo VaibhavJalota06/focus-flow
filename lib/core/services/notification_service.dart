@@ -19,15 +19,39 @@ class NotificationService {
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    const darwinSettings = DarwinInitializationSettings(
+    final darwinCategories = <DarwinNotificationCategory>[
+      DarwinNotificationCategory(
+        'task_reminder_category',
+        actions: <DarwinNotificationAction>[
+          DarwinNotificationAction.plain('snooze_15', 'Snooze 15m'),
+          DarwinNotificationAction.plain('snooze_1h', 'Snooze 1 hour'),
+          DarwinNotificationAction.plain(
+            'mark_complete',
+            'Mark Completed',
+            options: <DarwinNotificationActionOption>{
+              DarwinNotificationActionOption.foreground,
+            },
+          ),
+        ],
+        options: <DarwinNotificationCategoryOption>{
+          DarwinNotificationCategoryOption.customDismissAction,
+          DarwinNotificationCategoryOption.allowInCarPlay,
+        },
+      ),
+    ];
+
+    final darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
       defaultPresentAlert: true,
       defaultPresentBadge: true,
       defaultPresentSound: true,
+      defaultPresentBanner: true,
+      defaultPresentList: true,
+      notificationCategories: darwinCategories,
     );
-    const initSettings = InitializationSettings(
+    final initSettings = InitializationSettings(
       android: androidSettings,
       iOS: darwinSettings,
       macOS: darwinSettings,
@@ -171,14 +195,19 @@ class NotificationService {
       ],
     );
 
-    const darwinDetails = DarwinNotificationDetails(
+    final darwinDetails = DarwinNotificationDetails(
       presentAlert: true,
+      presentBanner: true,
+      presentList: true,
       presentBadge: true,
       presentSound: true,
-      interruptionLevel: InterruptionLevel.active,
+      interruptionLevel: InterruptionLevel.timeSensitive,
+      categoryIdentifier: 'task_reminder_category',
+      threadIdentifier: 'focus_flow_tasks',
+      subtitle: '${task.priority.label} Priority • ${task.categoryId.toUpperCase()}',
     );
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: darwinDetails,
       macOS: darwinDetails,
