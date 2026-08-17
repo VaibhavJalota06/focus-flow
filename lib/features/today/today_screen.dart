@@ -182,7 +182,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Text('🔥', style: TextStyle(fontSize: 15)),
+                                const Text('⚡', style: TextStyle(fontSize: 15)),
                                 const SizedBox(width: 5),
                                 Text(
                                   analytics.currentStreak == 1
