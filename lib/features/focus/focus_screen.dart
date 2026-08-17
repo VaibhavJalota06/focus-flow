@@ -26,64 +26,42 @@ class FocusScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
             children: [
-              // Mode Selector Preset Buttons
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ChoiceChip(
-                      showCheckmark: false,
-                      selectedColor: theme.colorScheme.primary,
-                      label: Text(
-                        '⚡ 25m Sprint Mode',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: focusState.totalDurationSeconds == 25 * 60
-                              ? Colors.white
-                              : theme.colorScheme.onSurface,
-                        ),
-                      ),
-                      selected: focusState.totalDurationSeconds == 25 * 60,
-                      onSelected: (_) => focusNotifier.setDuration(25),
+              // Non-scrollable Segmented Mode Selector Buttons
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
                     ),
-                    const SizedBox(width: 8),
-                    ChoiceChip(
-                      showCheckmark: false,
-                      selectedColor: theme.colorScheme.primary,
-                      label: Text(
-                        '☕ 5m Quick Recharge',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: focusState.totalDurationSeconds == 5 * 60
-                              ? Colors.white
-                              : theme.colorScheme.onSurface,
-                        ),
+                  ),
+                  child: Row(
+                    children: [
+                      _buildPresetSegment(
+                        label: '⚡ 25m Sprint',
+                        isSelected: focusState.totalDurationSeconds == 25 * 60,
+                        onTap: () => focusNotifier.setDuration(25),
+                        theme: theme,
                       ),
-                      selected: focusState.totalDurationSeconds == 5 * 60,
-                      onSelected: (_) => focusNotifier.setDuration(5),
-                    ),
-                    const SizedBox(width: 8),
-                    ChoiceChip(
-                      showCheckmark: false,
-                      selectedColor: theme.colorScheme.primary,
-                      label: Text(
-                        '🚀 50m Deep Flow',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: focusState.totalDurationSeconds == 50 * 60
-                              ? Colors.white
-                              : theme.colorScheme.onSurface,
-                        ),
+                      const SizedBox(width: 4),
+                      _buildPresetSegment(
+                        label: '☕ 5m Rest',
+                        isSelected: focusState.totalDurationSeconds == 5 * 60,
+                        onTap: () => focusNotifier.setDuration(5),
+                        theme: theme,
                       ),
-                      selected: focusState.totalDurationSeconds == 50 * 60,
-                      onSelected: (_) => focusNotifier.setDuration(50),
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      _buildPresetSegment(
+                        label: '🚀 50m Flow',
+                        isSelected: focusState.totalDurationSeconds == 50 * 60,
+                        onTap: () => focusNotifier.setDuration(50),
+                        theme: theme,
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -290,6 +268,45 @@ class FocusScreen extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildPresetSegment({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required ThemeData theme,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
