@@ -123,9 +123,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
     final nav = Navigator.of(context);
 
     final notifier = ref.read(authProvider.notifier);
-    await notifier.signInWithGoogle();
+    final success = await notifier.signInWithGoogle();
     if (mounted) {
-      final user = ref.read(authProvider).user;
+      final authState = ref.read(authProvider);
+      final user = authState.user;
       if (user != null && !user.isGuest) {
         await ref.read(settingsProvider.notifier).updateUserName(user.name);
         await ref.read(settingsProvider.notifier).completeOnboarding();
@@ -141,6 +142,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
         } else {
           nav.pop();
         }
+      } else if (!success && authState.errorMessage != null) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(authState.errorMessage!),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
@@ -256,6 +265,30 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Quick 1-Tap Instant Access Button
+              FilledButton.tonalIcon(
+                onPressed: authState.isLoading
+                    ? null
+                    : () async {
+                        await ref.read(authProvider.notifier).continueAsGuest();
+                        if (widget.onAuthSuccess != null) {
+                          widget.onAuthSuccess!();
+                        } else {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                icon: const Icon(Icons.flash_on_rounded, size: 18),
+                label: const Text(
+                  '⚡ Quick Instant Access (Offline Mode)',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
               ),
               const SizedBox(height: 16),

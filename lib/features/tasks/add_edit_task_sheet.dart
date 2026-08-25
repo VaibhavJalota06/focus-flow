@@ -102,9 +102,11 @@ class _AddEditTaskSheetState extends ConsumerState<AddEditTaskSheet> {
       if (_speechEnabled) {
         if (mounted) setState(() => _isListening = true);
         await _speechToText.listen(
-          listenFor: const Duration(seconds: 30),
-          pauseFor: const Duration(seconds: 4),
-          partialResults: true,
+          listenOptions: SpeechListenOptions(
+            listenMode: ListenMode.confirmation,
+            pauseFor: const Duration(seconds: 4),
+            partialResults: true,
+          ),
           onResult: (result) {
             if (mounted && result.recognizedWords.isNotEmpty) {
               setState(() {

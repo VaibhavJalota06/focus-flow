@@ -45,17 +45,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   void _listenToSupabaseAuth() {
     if (SupabaseService.instance.isLiveConfigured && SupabaseService.instance.isInitialized) {
-      SupabaseService.instance.client.auth.onAuthStateChange.listen((data) {
-        final session = data.session;
-        if (session != null) {
-          final realUser = SupabaseService.instance.userFromSupabaseUser(session.user);
-          if (realUser != null) {
-            _persistUser(realUser);
-            state = state.copyWith(user: realUser, isLoading: false, clearError: true);
-            CloudSyncService.instance.syncAll();
+      SupabaseService.instance.client.auth.onAuthStateChange.listen(
+        (data) {
+          final session = data.session;
+          if (session != null) {
+            final realUser = SupabaseService.instance.userFromSupabaseUser(session.user);
+            if (realUser != null) {
+              _persistUser(realUser);
+              state = state.copyWith(user: realUser, isLoading: false, clearError: true);
+              CloudSyncService.instance.syncAll();
+            }
           }
-        }
-      });
+        },
+        onError: (err) {
+          debugPrint('[AuthNotifier] Supabase auth stream notice: $err');
+          state = state.copyWith(isLoading: false);
+        },
+      );
     }
   }
 
@@ -289,9 +295,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
       CloudSyncService.instance.syncAll();
       return true;
     } catch (e) {
+      final isDevError = e.toString().contains('ApiException: 10') ||
+          e.toString().contains('sign_in_failed') ||
+          e.toString().contains('PlatformException');
+      final errorText = isDevError
+          ? 'Google Sign-In requires SHA-1 setup on Google Cloud Console. Please use Email Sign In or Continue as Guest.'
+          : 'Google Sign-In failed: ${e.toString()}';
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Google Sign-In failed: ${e.toString()}',
+        errorMessage: errorText,
       );
       return false;
     }
@@ -392,6 +404,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _persistUser(UserModel user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userStorageKey, user.toJson());
+    if (user.name.isNotEmpty) {
+      await prefs.setString('userName', user.name);
+    }
     if (!user.isGuest) {
       await prefs.setBool('onboardingCompleted', true);
     }

@@ -157,10 +157,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 
   Future<void> _handleGoogleSignIn() async {
-    await ref.read(authProvider.notifier).signInWithGoogle();
+    final success = await ref.read(authProvider.notifier).signInWithGoogle();
     if (mounted) {
-      final user = ref.read(authProvider).user;
-      if (user != null && !user.isGuest) {
+      final authState = ref.read(authProvider);
+      final user = authState.user;
+      if (user != null) {
         // Automatically save profile info and enter app directly
         await ref.read(settingsProvider.notifier).updateUserName(user.name);
         await ref.read(settingsProvider.notifier).completeOnboarding();
@@ -173,6 +174,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
             (route) => false,
           );
         }
+      } else if (!success && authState.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authState.errorMessage!),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
@@ -194,17 +203,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     await ref.read(settingsProvider.notifier).updateUserName(finalName);
     await ref.read(settingsProvider.notifier).updateDailyGoal(_dailyGoal);
 
-    // Request permissions safely
-    try {
-      await [
-        Permission.notification,
-        Permission.microphone,
-      ].request();
-    } catch (e) {
-      debugPrint('Permission request handled: $e');
-    }
-
-    // Complete onboarding and enter main app
+    // Complete onboarding and enter main app immediately
     await ref.read(settingsProvider.notifier).completeOnboarding();
     if (widget.onComplete != null) {
       widget.onComplete!();
@@ -215,6 +214,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         (route) => false,
       );
     }
+
+    // Request permissions safely in background
+    try {
+      [Permission.notification, Permission.microphone].request().ignore();
+    } catch (_) {}
   }
 
   @override
@@ -576,6 +580,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ],
             ),
           ),
+          const SizedBox(height: 10),
+
+          // Quick 1-Tap Instant Access Button
+          FilledButton.tonalIcon(
+            onPressed: authState.isLoading
+                ? null
+                : () async {
+                    await ref.read(authProvider.notifier).continueAsGuest();
+                    _goToPage(2);
+                  },
+            icon: const Icon(Icons.flash_on_rounded, size: 18),
+            label: const Text(
+              '⚡ Quick Instant Access (Skip Sign-In)',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(double.infinity, 48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+          ),
           const SizedBox(height: 16),
 
           Row(
@@ -634,7 +658,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               }
             },
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+
+          // Continue as Guest Option
+          Center(
+            child: TextButton.icon(
+              onPressed: authState.isLoading
+                  ? null
+                  : () async {
+                      await ref.read(authProvider.notifier).continueAsGuest();
+                      _goToPage(2);
+                    },
+              icon: Icon(Icons.person_outline_rounded,
+                  size: 18, color: theme.colorScheme.onSurfaceVariant),
+              label: Text(
+                'Continue as Guest (Offline Mode)',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
         ],
       ),
     );

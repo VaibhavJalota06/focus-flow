@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -15,11 +16,39 @@ class CloudSyncService {
 
   bool _isSyncing = false;
   bool get isSyncing => _isSyncing;
+  Timer? _backgroundSyncTimer;
 
   /// Observable sync status for UI feedback (Issue #9)
   final ValueNotifier<SyncStatus> syncStatus =
       ValueNotifier<SyncStatus>(SyncStatus.idle);
   String? lastSyncError;
+
+  /// Initialize continuous background synchronization
+  void startBackgroundSync() {
+    _backgroundSyncTimer?.cancel();
+    _backgroundSyncTimer = Timer.periodic(const Duration(seconds: 45), (_) {
+      syncInBackground();
+    });
+    // Trigger initial background sync
+    syncInBackground();
+  }
+
+  /// Stop background sync timer
+  void stopBackgroundSync() {
+    _backgroundSyncTimer?.cancel();
+    _backgroundSyncTimer = null;
+  }
+
+  /// Fire-and-forget background sync that never blocks the UI
+  void syncInBackground({String? userId}) {
+    Future.microtask(() async {
+      try {
+        await syncAll(userId: userId);
+      } catch (e) {
+        debugPrint('[CloudSyncService] Background sync non-blocking error handled: $e');
+      }
+    });
+  }
 
   /// Sync all local data with Supabase Cloud
   Future<void> syncAll({String? userId}) async {

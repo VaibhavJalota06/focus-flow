@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/settings_provider.dart';
+import 'core/services/cloud_sync_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/supabase_service.dart';
 import 'core/theme/app_theme.dart';
@@ -22,6 +23,7 @@ void main() async {
 
   // Initialize non-critical background services asynchronously
   NotificationService.instance.initialize().ignore();
+  CloudSyncService.instance.startBackgroundSync();
 }
 
 class TaskTrackerApp extends ConsumerWidget {
@@ -50,7 +52,7 @@ class TaskTrackerApp extends ConsumerWidget {
       );
     }
 
-    final isUserLoggedIn = authState.user != null && !authState.user!.isGuest;
+    final isUserLoggedIn = authState.user != null;
     final showMainApp = isUserLoggedIn || settings.onboardingCompleted;
 
     return MaterialApp(
@@ -62,6 +64,22 @@ class TaskTrackerApp extends ConsumerWidget {
       home: showMainApp
           ? const MainNavigationScreen()
           : const OnboardingScreen(),
+      onGenerateRoute: (routeSettings) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => showMainApp
+              ? const MainNavigationScreen()
+              : const OnboardingScreen(),
+        );
+      },
+      onUnknownRoute: (routeSettings) {
+        return MaterialPageRoute(
+          settings: routeSettings,
+          builder: (_) => showMainApp
+              ? const MainNavigationScreen()
+              : const OnboardingScreen(),
+        );
+      },
     );
   }
 }

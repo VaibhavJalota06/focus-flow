@@ -325,54 +325,7 @@ class SettingsScreen extends ConsumerWidget {
 
             // Section 4: Data Management
             _buildSectionTitle(theme, 'Data & Backup'),
-            ListTile(
-              leading: const Icon(Icons.cloud_sync_rounded, color: Colors.blueAccent),
-              title: const Text('Sync with Cloud (Supabase)'),
-              subtitle: ValueListenableBuilder<SyncStatus>(
-                valueListenable: CloudSyncService.instance.syncStatus,
-                builder: (context, status, _) {
-                  switch (status) {
-                    case SyncStatus.syncing:
-                      return const Text('Syncing tasks & focus sessions...');
-                    case SyncStatus.success:
-                      return const Text('All data synced in real-time ✨');
-                    case SyncStatus.failed:
-                      return Text('Sync issue: ${CloudSyncService.instance.lastSyncError ?? "Offline mode active"}');
-                    default:
-                      return const Text('Backup tasks & stats to Supabase Cloud');
-                  }
-                },
-              ),
-              trailing: ElevatedButton.icon(
-                onPressed: () async {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Starting Cloud Sync... ☁️'),
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
-                  await CloudSyncService.instance.syncAll();
-                  if (context.mounted) {
-                    final err = CloudSyncService.instance.lastSyncError;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          err == null
-                              ? 'Cloud sync completed successfully! ✨'
-                              : 'Sync notice: Operating in offline mode.',
-                        ),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                },
-                icon: const Icon(Icons.sync_rounded, size: 16),
-                label: const Text('Sync Now'),
-                style: ElevatedButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            ),
+
             ListTile(
               leading: const Icon(Icons.download_rounded),
               title: const Text('Export Backup (JSON)'),

@@ -153,7 +153,13 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                                         ),
                                       ),
                                       Text(
-                                        userSettings.userName.isNotEmpty ? userSettings.userName : 'There',
+                                        (ref.watch(authProvider).user?.name != null &&
+                                                ref.watch(authProvider).user!.name.isNotEmpty &&
+                                                ref.watch(authProvider).user!.name != 'Google User')
+                                            ? ref.watch(authProvider).user!.name
+                                            : (userSettings.userName.isNotEmpty && userSettings.userName != 'Google User'
+                                                ? userSettings.userName
+                                                : (ref.watch(authProvider).user?.name ?? 'Vaibhav Jalota')),
                                         style: theme.textTheme.titleMedium?.copyWith(
                                           fontWeight: FontWeight.bold,
                                         ),

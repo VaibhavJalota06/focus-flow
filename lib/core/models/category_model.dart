@@ -15,8 +15,29 @@ class CategoryModel {
     this.isDefault = false,
   });
 
-  // ignore: non_const_argument_for_const_parameter
-  IconData get icon => IconData(iconCodePoint, fontFamily: 'MaterialIcons');
+  IconData get icon {
+    switch (id) {
+      case 'work':
+        return Icons.work_rounded;
+      case 'personal':
+        return Icons.person_rounded;
+      case 'study':
+        return Icons.school_rounded;
+      case 'fitness':
+        return Icons.fitness_center_rounded;
+      case 'health':
+        return Icons.favorite_rounded;
+      case 'finance':
+        return Icons.account_balance_wallet_rounded;
+      case 'shopping':
+        return Icons.shopping_cart_rounded;
+      case 'ideas':
+        return Icons.lightbulb_rounded;
+      case 'other':
+      default:
+        return Icons.category_rounded;
+    }
+  }
   Color get color => Color(colorValue);
 
   Map<String, dynamic> toMap() {
