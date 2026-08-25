@@ -4,7 +4,6 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/settings_provider.dart';
 import '../../core/services/update_service.dart';
-import '../../core/services/cloud_sync_service.dart';
 import '../profile/profile_screen.dart';
 import '../../core/widgets/user_avatar_widget.dart';
 

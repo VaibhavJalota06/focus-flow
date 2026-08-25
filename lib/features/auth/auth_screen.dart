@@ -275,6 +275,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                     ? null
                     : () async {
                         await ref.read(authProvider.notifier).continueAsGuest();
+                        if (!context.mounted) return;
                         if (widget.onAuthSuccess != null) {
                           widget.onAuthSuccess!();
                         } else {
